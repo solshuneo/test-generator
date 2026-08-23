@@ -1,4 +1,2 @@
-body {
-    start:
-    end:
-}
+Min: 10
+Max: 100
