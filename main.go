@@ -9,14 +9,9 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type Variable struct {
-	Min int `yaml:"min"`
-	Max int `yaml:"max"`
-}
-
 func ValidateMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		var number Variable
+		var number generator.Variable
 		fmt.Printf("Here")
 		if err := c.ShouldBindYAML(&number); err != nil {
 			c.JSON(http.StatusBadRequest, Response{
@@ -42,7 +37,7 @@ func main() {
 			c.Abort()
 			return
 		}
-		number, ok := numberAny.(Variable)
+		number, ok := numberAny.(generator.Variable)
 		if !ok {
 			c.JSON(500, Response{
 				Message: InternalServerError,
@@ -50,7 +45,6 @@ func main() {
 			c.Abort()
 			return
 		}
-		fmt.Printf("start: %d, end: %d\n", number.Min, number.Max)
 		start := number.Min
 		end := number.Max
 
