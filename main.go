@@ -1,6 +1,8 @@
 package main
 
 import (
+	"net/http"
+
 	"test-generator/generator"
 
 	"github.com/gin-gonic/gin"
@@ -15,12 +17,18 @@ func ValidateMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var form Form
 		if err := c.ShouldBindJSON(&form); err != nil {
-			c.JSON(400, gin.H{"error": err.Error()})
+			c.JSON(http.StatusBadRequest, Response{
+				Data:    nil,
+				Message: InvalidInput,
+			})
 			c.Abort()
 			return
 		}
 		if form.Start > form.End {
-			c.JSON(400, gin.H{"error": "start must be less than end"})
+			c.JSON(http.StatusBadRequest, Response{
+				Data:    nil,
+				Message: LeftLessThanRight,
+			})
 			c.Abort()
 			return
 		}
@@ -34,13 +42,19 @@ func main() {
 	router.GET("/int", ValidateMiddleware(), func(c *gin.Context) {
 		formAny, okForm := c.Get("form")
 		if !okForm {
-			c.JSON(500, gin.H{"error": "form not found"})
+			c.JSON(500, Response{
+				Data:    nil,
+				Message: InternalServerError,
+			})
 			c.Abort()
 			return
 		}
 		form, ok := formAny.(Form)
 		if !ok {
-			c.JSON(500, gin.H{"error": "invalid form"})
+			c.JSON(500, Response{
+				Data:    nil,
+				Message: InternalServerError,
+			})
 			c.Abort()
 			return
 		}
@@ -48,7 +62,10 @@ func main() {
 		end := form.End
 		intNum, error := generator.GenerateIntNumber(start, end)
 		if error != nil {
-			c.JSON(500, gin.H{"error": error.Error()})
+			c.JSON(500, Response{
+				Data:    nil,
+				Message: InternalServerError,
+			})
 			c.Abort()
 			return
 		}
