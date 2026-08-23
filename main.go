@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"net/http"
 
 	"test-generator/generator"
@@ -12,16 +11,12 @@ import (
 func ValidateMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var number generator.Variable
-		fmt.Printf("Here")
 		if err := c.ShouldBindYAML(&number); err != nil {
-			c.JSON(http.StatusBadRequest, Response{
-				Message: InvalidInput,
-			})
+			ErrorResponse(c, http.StatusFailedDependency, InvalidInput)
 			c.Abort()
 			return
 		}
 		c.Set("number", number)
-		fmt.Printf("Here1")
 		c.Next()
 	}
 }
@@ -31,17 +26,13 @@ func main() {
 	router.POST("/number", ValidateMiddleware(), func(c *gin.Context) {
 		numberAny, okNumber := c.Get("number")
 		if !okNumber {
-			c.JSON(500, Response{
-				Message: InternalServerError,
-			})
+			InternalServerErrorResponse(c)
 			c.Abort()
 			return
 		}
 		number, ok := numberAny.(generator.Variable)
 		if !ok {
-			c.JSON(500, Response{
-				Message: InternalServerError,
-			})
+			InternalServerErrorResponse(c)
 			c.Abort()
 			return
 		}
@@ -50,15 +41,11 @@ func main() {
 
 		genNumber, error := generator.GenerateIntNumber(start, end)
 		if error != nil {
-			c.JSON(500, Response{
-				Message: InternalServerError,
-			})
+			InternalServerErrorResponse(c)
 			c.Abort()
 			return
 		}
-		c.JSON(200, Response{
-			Data: genNumber,
-		})
+		SuccessResponse(c, http.StatusOK, genNumber)
 	})
 
 	router.Run(":3001")
