@@ -1,8 +1,6 @@
 package main
 
 import (
-	"fmt"
-
 	"test-generator/generator"
 
 	"github.com/gin-gonic/gin"
@@ -21,18 +19,39 @@ func ValidateMiddleware() gin.HandlerFunc {
 			c.Abort()
 			return
 		}
+		if form.Start > form.End {
+			c.JSON(400, gin.H{"error": "start must be less than end"})
+			c.Abort()
+			return
+		}
 		c.Set("form", form)
-		fmt.Printf("joined")
 		c.Next()
-		fmt.Printf("joined1")
 	}
 }
 
 func main() {
 	router := gin.New()
 	router.GET("/int", ValidateMiddleware(), func(c *gin.Context) {
-		form, _ := c.Get("form")
-		intNum := generator.GenerateIntNumber(form.(Form).Start, form.(Form).End)
+		formAny, okForm := c.Get("form")
+		if !okForm {
+			c.JSON(500, gin.H{"error": "form not found"})
+			c.Abort()
+			return
+		}
+		form, ok := formAny.(Form)
+		if !ok {
+			c.JSON(500, gin.H{"error": "invalid form"})
+			c.Abort()
+			return
+		}
+		start := form.Start
+		end := form.End
+		intNum, error := generator.GenerateIntNumber(start, end)
+		if error != nil {
+			c.JSON(500, gin.H{"error": error.Error()})
+			c.Abort()
+			return
+		}
 		c.JSON(200, gin.H{"int": intNum})
 	})
 
