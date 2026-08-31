@@ -1,6 +1,8 @@
 package main
 
-import "test-generator/router"
+import (
+	"test-generator/router"
+)
 
 func main() {
 	router := router.SetupRouter()
